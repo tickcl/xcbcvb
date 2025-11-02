@@ -1,21 +1,3 @@
-local _raw_load = loadstring or load
-loadstring = function(src)
-	if type(src) ~= "string" then
-		return nil, "bad argument #1 to 'loadstring' (string expected)"
-	end
-
-	if src:find("\0", 1, true) then
-		return nil, "Luau bytecode should not be loadable!"
-	end
-
-	local ok, res = pcall(_raw_load, src)
-	if not ok then
-		return nil, tostring(res)
-	end
-
-	return res
-end
-
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local player = game.Players.LocalPlayer
