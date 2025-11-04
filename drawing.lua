@@ -705,7 +705,6 @@ function DrawingLib.createTextButton()
 		__tostring = function() return "Drawing" end
 	})
 end
-)";
 
 function DrawingLib.createTextLabel()
 	local labelObj = ({
