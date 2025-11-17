@@ -421,6 +421,79 @@ function DrawingLib.createQuad()
 	})
 end
 
+function DrawingLib.createImage()
+	local imageObj = ({
+		Data = "",
+		Size = Vector2.new(100, 100),
+		Position = Vector2.zero,
+		Transparency = 1,
+		Visible = true,
+		ZIndex = 1,
+		Color = Color3.new(1, 1, 1)
+	} + baseDrawingObj)
+
+	local imageLabel = Instance.new("ImageLabel")
+	imageLabel.Name = drawingIndex
+	imageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	imageLabel.BackgroundTransparency = 1
+	imageLabel.ScaleType = Enum.ScaleType.Stretch
+	imageLabel.ZIndex = imageObj.ZIndex
+
+	imageLabel.Parent = drawingUI
+
+	return setmetatable({Parent = drawingUI}, {
+		__newindex = function(_, index, value)
+			if imageObj[index] == nil then
+				warn("Invalid property for image: " .. tostring(index))
+				return
+			end
+
+			if index == "Data" then
+				local asset
+				if typeof(value) == "string" then
+					-- URL or asset id
+					if value:lower():find("http") then
+						asset = value
+					else
+						asset = getcustomasset and getcustomasset(value) or value
+					end
+				end
+				imageLabel.Image = asset or ""
+			elseif index == "Size" then
+				imageLabel.Size = UDim2.fromOffset(value.X, value.Y)
+			elseif index == "Position" then
+				imageLabel.Position = UDim2.fromOffset(value.X, value.Y)
+			elseif index == "Transparency" then
+				imageLabel.ImageTransparency = convertTransparency(value)
+			elseif index == "Visible" then
+				imageLabel.Visible = value
+			elseif index == "ZIndex" then
+				imageLabel.ZIndex = value
+			elseif index == "Color" then
+				imageLabel.ImageColor3 = value
+			elseif index == "Parent" then
+				imageLabel.Parent = value
+			end
+
+			imageObj[index] = value
+		end,
+
+		__index = function(self, index)
+			if index == "Remove" or index == "Destroy" then
+				return function()
+					imageLabel:Destroy()
+					imageObj:Remove()
+				end
+			end
+			return imageObj[index]
+		end,
+
+		__tostring = function()
+			return "Drawing"
+		end
+	})
+end
+
 function DrawingLib.createTriangle()
 	local triangleObj = ({
 		PointA = Vector2.zero,
