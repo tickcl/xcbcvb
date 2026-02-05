@@ -993,12 +993,17 @@ getgenv().setrenderproperty = function(drawingObj, property, value)
 end
 
 getgenv().cleardrawcache = function()
-	for _, obj in ipairs(DRAWING_OBJECTS) do
-		if obj and obj.Remove then
-			pcall(obj.Remove, obj)
+	for i, obj in ipairs(DRAWING_OBJECTS) do
+		if type(obj) == "table" and obj.__OBJECT_EXISTS then
+			pcall(function()
+				obj.__OBJECT_EXISTS = false
+				if obj.Remove then
+					obj:Remove()
+				end
+			end)
 		end
+		DRAWING_OBJECTS[i] = nil
 	end
-	table.clear(DRAWING_OBJECTS)
 end
 
 Drawing = getgenv().Drawing
