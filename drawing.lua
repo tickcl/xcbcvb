@@ -25,6 +25,7 @@ local function convertTransparency(transparency)
 end
 
 local baseDrawingObj = setmetatable({
+	__OBJECT_EXISTS = true,
 	Visible = true,
 	ZIndex = 0,
 	Transparency = 1,
@@ -56,8 +57,12 @@ local baseDrawingObj = setmetatable({
 }, {
 	__add = function(t1, t2)
 		local result = {}
-		for k,v in pairs(t1) do result[k] = v end
-		for k,v in pairs(t2) do result[k] = v end
+		for index, value in pairs(t1) do
+			result[index] = value
+		end
+		for index, value in pairs(t2) do
+			result[index] = value
+		end
 		return result
 	end
 })
@@ -81,12 +86,9 @@ function DrawingLib.createLine()
 	lineFrame.Name = drawingIndex
 	lineFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 	lineFrame.BorderSizePixel = 0
-	local wrapper = {
-	Parent = drawingUI,
-	__OBJECT_EXISTS = true
-	}
+
 	lineFrame.Parent = drawingUI
-	return setmetatable(wrapper, {
+	return setmetatable({Parent = drawingUI}, {
 		__newindex = function(_, index, value)
 			if lineObj[index] == nil then 
 				warn("Invalid property: " .. tostring(index))
@@ -120,10 +122,8 @@ function DrawingLib.createLine()
 		__index = function(self, index)
 			if index == "Remove" or index == "Destroy" then
 				return function()
-					if not wrapper.__OBJECT_EXISTS then return end
-					wrapper.__OBJECT_EXISTS = false
-				
 					lineFrame:Destroy()
+					lineObj:Remove()
 				end
 			end
 			return lineObj[index]
