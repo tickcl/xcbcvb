@@ -6,6 +6,7 @@ drawingUI.Name = ""
 drawingUI.IgnoreGuiInset = true
 drawingUI.DisplayOrder = 0x7fffffff
 drawingUI.Parent = coreGui
+local DRAWING_OBJECTS = {}
 
 local drawingIndex = 0
 local drawingFontsEnum = {
@@ -24,6 +25,7 @@ local function convertTransparency(transparency)
 end
 
 local baseDrawingObj = setmetatable({
+	__OBJECT_EXISTS = true,
 	Visible = true,
 	ZIndex = 0,
 	Transparency = 1,
@@ -927,41 +929,46 @@ getgenv().Drawing = {
         ["Monospace"] = 3
     },
     
-    new = function(drawingType)
-        drawingIndex += 1
-        if drawingType == "Line" then
-            return DrawingLib.createLine()
-        elseif drawingType == "Text" then
-            return DrawingLib.createText()
-        elseif drawingType == "Circle" then
-            return DrawingLib.createCircle()
-        elseif drawingType == "Square" then
-            return DrawingLib.createSquare()
-        elseif drawingType == "Image" then
-            return DrawingLib.createImage()
-        elseif drawingType == "Quad" then
-            return DrawingLib.createQuad()
-        elseif drawingType == "Triangle" then
-            return DrawingLib.createTriangle()
-        elseif drawingType == "Frame" then
-            return DrawingLib.createFrame()
-        elseif drawingType == "ScreenGui" then
-            return DrawingLib.createScreenGui()
-        elseif drawingType == "TextButton" then
-            return DrawingLib.createTextButton()
-        elseif drawingType == "TextLabel" then
-            return DrawingLib.createTextLabel()
-        elseif drawingType == "TextBox" then
-            return DrawingLib.createTextBox()
-        else
-            error("Invalid drawing type: " .. tostring(drawingType))
-        end
-    end
+	new = function(drawingType)
+		drawingIndex += 1
+	
+		local obj
+		if drawingType == "Line" then
+			obj = DrawingLib.createLine()
+		elseif drawingType == "Text" then
+			obj = DrawingLib.createText()
+		elseif drawingType == "Circle" then
+			obj = DrawingLib.createCircle()
+		elseif drawingType == "Square" then
+			obj = DrawingLib.createSquare()
+		elseif drawingType == "Image" then
+			obj = DrawingLib.createImage()
+		elseif drawingType == "Quad" then
+			obj = DrawingLib.createQuad()
+		elseif drawingType == "Triangle" then
+			obj = DrawingLib.createTriangle()
+		elseif drawingType == "Frame" then
+			obj = DrawingLib.createFrame()
+		elseif drawingType == "ScreenGui" then
+			obj = DrawingLib.createScreenGui()
+		elseif drawingType == "TextButton" then
+			obj = DrawingLib.createTextButton()
+		elseif drawingType == "TextLabel" then
+			obj = DrawingLib.createTextLabel()
+		elseif drawingType == "TextBox" then
+			obj = DrawingLib.createTextBox()
+		else
+			error("Invalid drawing type: " .. tostring(drawingType))
+		end
+	
+		table.insert(DRAWING_OBJECTS, obj)
+		return obj
+	end
 }
 
 getgenv().isrenderobj = function(drawingObj)
     local success, isrenderobj = pcall(function()
-		return drawingObj.Parent == drawingUI
+		return type(drawingObj) == "table" and drawingObj.__OBJECT_EXISTS == true
 	end)
 	if not success then return false end
 	return isrenderobj
@@ -980,14 +987,18 @@ end
 
 
 getgenv().setrenderproperty = function(drawingObj, property, value)
-	assert(getgenv().getrenderproperty(drawingObj, property), "'" .. tostring(property) .. "' is not a valid property of " .. tostring(drawingObj) .. ", " .. tostring(typeof(drawingObj)))
-	drawingObj[property]  = value
+	local v = getgenv().getrenderproperty(drawingObj, property)
+	assert(v ~= nil, "'" .. tostring(property) .. "' is not a valid property of " .. tostring(drawingObj) .. ", " .. typeof(drawingObj))
+	drawingObj[property] = value
 end
 
 getgenv().cleardrawcache = function()
-	for _, drawing in drawingUI:GetDescendants() do
-		drawing:Remove()
+	for _, obj in ipairs(DRAWING_OBJECTS) do
+		if obj and obj.Remove then
+			pcall(obj.Remove, obj)
+		end
 	end
+	table.clear(DRAWING_OBJECTS)
 end
 
 Drawing = getgenv().Drawing
